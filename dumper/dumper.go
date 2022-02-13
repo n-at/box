@@ -30,6 +30,63 @@ type AbstractDumper struct {
 	time                time.Time
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
+func (dumper *AbstractDumper) execute(commandline string) error {
+	if err := dumper.executeCommand(commandline); err != nil {
+		return err
+	}
+
+	if err := dumper.calculateChecksums(); err != nil {
+		return err
+	}
+
+	if err := dumper.copyLatest(); err != nil {
+		return err
+	}
+
+	if dumper.configuration.Daily {
+		if !dumper.dailyExists() {
+			if err := dumper.copyDaily(); err != nil {
+				return err
+			}
+		}
+		if err := dumper.rotateDaily(); err != nil {
+			return err
+		}
+	}
+
+	if dumper.configuration.Weekly {
+		if !dumper.weeklyExists() {
+			if err := dumper.copyWeekly(); err != nil {
+				return err
+			}
+		}
+		if err := dumper.rotateWeekly(); err != nil {
+			return err
+		}
+	}
+
+	if dumper.configuration.Monthly {
+		if !dumper.monthlyExists() {
+			if err := dumper.copyMonthly(); err != nil {
+				return err
+			}
+		}
+		if err := dumper.rotateMonthly(); err != nil {
+			return err
+		}
+	}
+
+	if err := dumper.clearTmpFiles(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 func (dumper *AbstractDumper) rootPath() string {
 	if len(dumper.configuration.Path) != 0 {
 		return dumper.configuration.Path
@@ -86,6 +143,11 @@ func (dumper *AbstractDumper) dailyChecksumFileName() string {
 	return fmt.Sprintf("%s%c%s.checksum", dumper.dailyPath(), os.PathSeparator, dumper.dailyName())
 }
 
+func (dumper *AbstractDumper) dailyExists() bool {
+	_, err := os.Stat(dumper.dailyDumpFileName())
+	return err == nil || !errors.Is(err, os.ErrNotExist)
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 func (dumper *AbstractDumper) weeklyPath() string {
@@ -109,6 +171,11 @@ func (dumper *AbstractDumper) weeklyChecksumName() string {
 	return fmt.Sprintf("%s%c%s.checksum", dumper.weeklyPath(), os.PathSeparator, dumper.weeklyName())
 }
 
+func (dumper *AbstractDumper) weeklyExists() bool {
+	_, err := os.Stat(dumper.dailyDumpFileName())
+	return err == nil || !errors.Is(err, os.ErrNotExist)
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 func (dumper *AbstractDumper) monthlyPath() string {
@@ -129,6 +196,11 @@ func (dumper *AbstractDumper) monthlyLogFileName() string {
 
 func (dumper *AbstractDumper) monthlyChecksumName() string {
 	return fmt.Sprintf("%s%c%s.checksum", dumper.monthlyPath(), os.PathSeparator, dumper.monthlyName())
+}
+
+func (dumper *AbstractDumper) monthlyExists() bool {
+	_, err := os.Stat(dumper.monthlyDumpFileName())
+	return err == nil || !errors.Is(err, os.ErrNotExist)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
