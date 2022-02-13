@@ -2,14 +2,16 @@ package main
 
 import (
 	"box/dumper"
+	"box/notifier"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"os"
 )
 
 var (
-	globalConfiguration dumper.GlobalConfiguration
-	dumpConfiguration   []dumper.Configuration
+	globalConfiguration       dumper.GlobalConfiguration
+	dumpConfiguration         []dumper.Configuration
+	notificationConfiguration notifier.Configuration
 )
 
 func init() {
@@ -37,8 +39,14 @@ func init() {
 	if err := viper.UnmarshalKey("dumps", &dumpConfiguration); err != nil {
 		log.Fatalf("unable to read dumps configuration: %s", err)
 	}
+	if err := viper.UnmarshalKey("notification", &notificationConfiguration); err != nil {
+		log.Fatalf("unable to read notification configuration: %s", err)
+	}
 }
 
 func main() {
-	log.Info("Hello!")
+	//notifier := notifier.Notifier{
+	//	Configuration: notificationConfiguration,
+	//}
+
 }
