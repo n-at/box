@@ -1,6 +1,9 @@
 package dumper
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 type PostgresDumper struct {
 	AbstractDumper
@@ -16,11 +19,15 @@ func NewPostgres(global GlobalConfiguration, local Configuration) (*PostgresDump
 	if len(global.Path) == 0 && len(local.Path) == 0 {
 		return nil, errors.New("dumper path not defined")
 	}
+	if len(global.TmpPath) == 0 && len(local.TmpPath) == 0 {
+		return nil, errors.New("dumper tmp path new defined")
+	}
 
 	dumper := PostgresDumper{
 		AbstractDumper{
 			globalConfiguration: global,
 			configuration:       local,
+			time:                time.Now(),
 		},
 	}
 

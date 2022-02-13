@@ -97,6 +97,8 @@ func (notifier *Notifier) notify(status Status, dumperName string, message strin
 	}()
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 func statusColor(status Status) string {
 	switch status {
 	case StatusSuccess:

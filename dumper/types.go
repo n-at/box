@@ -10,6 +10,7 @@ const (
 
 type GlobalConfiguration struct {
 	Path                string
+	TmpPath             string
 	PgdumpExecutable    string
 	MongodumpExecutable string
 	GbakExecutable      string
@@ -22,6 +23,9 @@ type Configuration struct {
 	//override destination path
 	//when empty, path will be global path + dumper name
 	Path string
+
+	//override tmp path
+	TmpPath string
 
 	//variables to pass to dump executable
 	Vars map[string]string
