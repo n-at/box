@@ -1,9 +1,15 @@
 package main
 
 import (
+	"box/dumper"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"os"
+)
+
+var (
+	globalConfiguration dumper.GlobalConfiguration
+	dumpConfiguration   []dumper.Configuration
 )
 
 func init() {
@@ -17,7 +23,19 @@ func init() {
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(".")
 	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalf("Unable to read config file: %s", err)
+		log.Fatalf("unable to read config file: %s", err)
+	}
+	globalConfiguration = dumper.GlobalConfiguration{
+		Path:                "dumps",
+		PgdumpExecutable:    "pg_dump",
+		MongodumpExecutable: "mongodump",
+		GbakExecutable:      "gbak",
+	}
+	if err := viper.UnmarshalKey("global", &globalConfiguration); err != nil {
+		log.Fatalf("unable to read global configuration: %s", err)
+	}
+	if err := viper.UnmarshalKey("dumps", &dumpConfiguration); err != nil {
+		log.Fatalf("unable to read dumps configuration: %s", err)
 	}
 }
 
