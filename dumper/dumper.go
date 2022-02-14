@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"regexp"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -348,4 +349,11 @@ func fileChecksum(hashType, filePath string) (string, error) {
 	}
 
 	return hex.EncodeToString(hasher.Sum(nil)), nil
+}
+
+func esc(param string) string {
+	param = strings.ReplaceAll(param, "$", "\\$")
+	param = strings.ReplaceAll(param, "\"", "\\\"")
+	param = strings.ReplaceAll(param, "\n", "\\n")
+	return param
 }

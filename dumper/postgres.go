@@ -2,6 +2,8 @@ package dumper
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 )
 
@@ -35,14 +37,35 @@ func NewPostgres(global GlobalConfiguration, local Configuration) (*PostgresDump
 }
 
 func (dumper *PostgresDumper) Dump() error {
-	if err := dumper.makeDirectories(); err != nil {
-		return err
+	stringBuilder := strings.Builder{}
+
+	//https://www.postgresql.org/docs/14/app-pgdump.html
+	//Example configuration:
+	//password: "******"
+	//schema: "public"
+	//dbname: "database"
+	//host: "localhost"
+	//port: "5432"
+	//username: "user"
+	vars := dumper.configuration.Vars
+
+	if _, ok := vars["password"]; ok {
+		password := fmt.Sprintf("PGPASSWORD=\"%s\" ", esc(vars["password"]))
+		stringBuilder.WriteString(password)
 	}
 
-	//TODO make command string
-	//TODO execute command
-	//TODO copy dump
-	//TODO rotate dumps
+	stringBuilder.WriteString(fmt.Sprintf("\"%s\" ", esc(dumper.globalConfiguration.PgdumpExecutable)))
+	stringBuilder.WriteString("--verbose ")
+	stringBuilder.WriteString("--format=plain ")
 
-	return nil
+	for key, value := range vars {
+		if key == "verbose" || key == "format" || key == "password" {
+			continue
+		}
+		stringBuilder.WriteString(fmt.Sprintf("--%s=\"%s\" ", key, esc(value)))
+	}
+
+	stringBuilder.WriteString(fmt.Sprintf("| gzip > \"%s\"", esc(dumper.tmpDumpFileName())))
+
+	return dumper.execute(stringBuilder.String())
 }
