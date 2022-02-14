@@ -40,6 +40,7 @@ func (dumper *Mongo4Dumper) Dump() error {
 	//authenticationDatabase: "admin"
 	//db: "users"
 
+	stringBuilder.WriteString(fmt.Sprintf("\"%s\" ", esc(dumper.globalConfiguration.Mongodump4Executable)))
 	stringBuilder.WriteString("--verbose ")
 	stringBuilder.WriteString(fmt.Sprintf("--archive=\"%s\" ", esc(dumper.tmpDumpFileName())))
 

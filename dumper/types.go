@@ -14,7 +14,6 @@ type GlobalConfiguration struct {
 	PgdumpExecutable     string
 	Mongodump5Executable string
 	Mongodump4Executable string
-	GbakExecutable       string
 }
 
 type Configuration struct {

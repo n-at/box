@@ -1,3 +1,3 @@
-# box - make dumps of PostgreSQL, MongoDB and Firebird 2.5 databases
+# box - make dumps of PostgreSQL and MongoDB databases
 
 
