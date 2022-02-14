@@ -3,6 +3,7 @@ package main
 import (
 	"box/dumper"
 	"box/notifier"
+	"errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"os"
@@ -45,8 +46,34 @@ func init() {
 }
 
 func main() {
-	//notifier := notifier.Notifier{
-	//	Configuration: notificationConfiguration,
-	//}
+	n := notifier.Notifier{
+		Configuration: notificationConfiguration,
+	}
 
+	for _, configuration := range dumpConfiguration {
+		var d dumper.Dumper
+		var err error
+
+		switch configuration.Type {
+		case "postgres":
+			d, err = dumper.NewPostgres(globalConfiguration, configuration)
+		case "mongo":
+			d, err = dumper.NewMongo5(globalConfiguration, configuration)
+		case "mongo_legacy":
+			d, err = dumper.NewMongo4(globalConfiguration, configuration)
+		default:
+			err = errors.New("unknown dumper type: " + configuration.Type)
+		}
+		if err != nil {
+			log.Errorf("unable to create dumper: %s", err)
+		}
+
+		n.Notify(notifier.StatusInfo, configuration.Name, "starting backup")
+
+		if err := d.Dump(); err != nil {
+			n.Notify(notifier.StatusError, configuration.Name, err.Error())
+		} else {
+			n.Notify(notifier.StatusSuccess, configuration.Name, "done")
+		}
+	}
 }

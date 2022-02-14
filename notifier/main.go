@@ -53,7 +53,7 @@ type Notifier struct {
 	Configuration Configuration
 }
 
-func (notifier *Notifier) notify(status Status, dumperName string, message string) {
+func (notifier *Notifier) Notify(status Status, dumperName string, message string) {
 	if !notifier.Configuration.Enabled {
 		return
 	}
