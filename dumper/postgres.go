@@ -15,15 +15,6 @@ func NewPostgres(global GlobalConfiguration, local Configuration) (*PostgresDump
 	if len(global.PgdumpExecutable) == 0 {
 		return nil, errors.New("pg_dump executable not defined")
 	}
-	if len(local.Name) == 0 {
-		return nil, errors.New("dumper name not defined")
-	}
-	if len(global.Path) == 0 && len(local.Path) == 0 {
-		return nil, errors.New("dumper path not defined")
-	}
-	if len(global.TmpPath) == 0 && len(local.TmpPath) == 0 {
-		return nil, errors.New("dumper tmp path new defined")
-	}
 
 	dumper := PostgresDumper{
 		AbstractDumper{

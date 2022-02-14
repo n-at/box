@@ -9,11 +9,12 @@ const (
 )
 
 type GlobalConfiguration struct {
-	Path                string
-	TmpPath             string
-	PgdumpExecutable    string
-	MongodumpExecutable string
-	GbakExecutable      string
+	Path                 string
+	TmpPath              string
+	PgdumpExecutable     string
+	Mongodump5Executable string
+	Mongodump4Executable string
+	GbakExecutable       string
 }
 
 type Configuration struct {

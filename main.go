@@ -28,10 +28,11 @@ func init() {
 		log.Fatalf("unable to read config file: %s", err)
 	}
 	globalConfiguration = dumper.GlobalConfiguration{
-		Path:                "dumps",
-		PgdumpExecutable:    "pg_dump",
-		MongodumpExecutable: "mongodump",
-		GbakExecutable:      "gbak",
+		Path:                 "dumps",
+		PgdumpExecutable:     "pg_dump",
+		Mongodump5Executable: "mongodump",
+		Mongodump4Executable: "mongodump",
+		GbakExecutable:       "gbak",
 	}
 	if err := viper.UnmarshalKey("global", &globalConfiguration); err != nil {
 		log.Fatalf("unable to read global configuration: %s", err)

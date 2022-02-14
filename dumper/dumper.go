@@ -37,6 +37,16 @@ type AbstractDumper struct {
 }
 
 func (dumper *AbstractDumper) execute(commandline string) error {
+	if len(dumper.configuration.Name) == 0 {
+		return errors.New("dumper name not defined")
+	}
+	if len(dumper.configuration.Path) == 0 && len(dumper.globalConfiguration.Path) == 0 {
+		return errors.New("dumper path not defined")
+	}
+	if len(dumper.configuration.TmpPath) == 0 && len(dumper.globalConfiguration.TmpPath) == 0 {
+		return errors.New("dumper tmp path not defined")
+	}
+
 	if err := dumper.executeCommand(commandline); err != nil {
 		return err
 	}
