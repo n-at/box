@@ -9,8 +9,11 @@ import (
 	"fmt"
 	"hash"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"regexp"
+	"sort"
 	"time"
 )
 
@@ -24,56 +27,77 @@ type Dumper interface {
 	Dump() error
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 type AbstractDumper struct {
 	globalConfiguration GlobalConfiguration
 	configuration       Configuration
 	time                time.Time
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
 func (dumper *AbstractDumper) execute(commandline string) error {
 	if err := dumper.executeCommand(commandline); err != nil {
 		return err
 	}
-
 	if err := dumper.calculateChecksums(); err != nil {
 		return err
 	}
 
-	if err := dumper.copyLatest(); err != nil {
+	latest := PeriodDump{
+		rootPath:            dumper.rootPath(),
+		name:                "latest",
+		tmpDumpFileName:     dumper.tmpDumpFileName(),
+		tmpLogFileName:      dumper.tmpLogFileName(),
+		tmpChecksumFileName: dumper.tmpChecksumFileName(),
+		maxItemsCount:       1,
+		overwrite:           true,
+	}
+	if err := latest.execute(); err != nil {
 		return err
 	}
 
 	if dumper.configuration.Daily {
-		if !dumper.dailyExists() {
-			if err := dumper.copyDaily(); err != nil {
-				return err
-			}
+		daily := PeriodDump{
+			rootPath:            fmt.Sprintf("%s%c%s", dumper.rootPath(), os.PathSeparator, "daily"),
+			name:                dumper.time.Format("2006-01-02"),
+			tmpDumpFileName:     dumper.tmpDumpFileName(),
+			tmpLogFileName:      dumper.tmpLogFileName(),
+			tmpChecksumFileName: dumper.tmpChecksumFileName(),
+			maxItemsCount:       dumper.configuration.Days,
+			overwrite:           false,
 		}
-		if err := dumper.rotateDaily(); err != nil {
+		if err := daily.execute(); err != nil {
 			return err
 		}
 	}
 
 	if dumper.configuration.Weekly {
-		if !dumper.weeklyExists() {
-			if err := dumper.copyWeekly(); err != nil {
-				return err
-			}
+		year, week := dumper.time.ISOWeek()
+		weekly := PeriodDump{
+			rootPath:            fmt.Sprintf("%s%c%s", dumper.rootPath(), os.PathSeparator, "weekly"),
+			name:                fmt.Sprintf("%04d-%02d", year, week),
+			tmpDumpFileName:     dumper.tmpDumpFileName(),
+			tmpLogFileName:      dumper.tmpLogFileName(),
+			tmpChecksumFileName: dumper.tmpChecksumFileName(),
+			maxItemsCount:       dumper.configuration.Weeks,
+			overwrite:           false,
 		}
-		if err := dumper.rotateWeekly(); err != nil {
+		if err := weekly.execute(); err != nil {
 			return err
 		}
 	}
 
 	if dumper.configuration.Monthly {
-		if !dumper.monthlyExists() {
-			if err := dumper.copyMonthly(); err != nil {
-				return err
-			}
+		monthly := PeriodDump{
+			rootPath:            fmt.Sprintf("%s%c%s", dumper.rootPath(), os.PathSeparator, "monthly"),
+			name:                dumper.time.Format("2006-01"),
+			tmpDumpFileName:     dumper.tmpDumpFileName(),
+			tmpLogFileName:      dumper.tmpLogFileName(),
+			tmpChecksumFileName: dumper.tmpChecksumFileName(),
+			maxItemsCount:       dumper.configuration.Months,
+			overwrite:           false,
 		}
-		if err := dumper.rotateMonthly(); err != nil {
+		if err := monthly.execute(); err != nil {
 			return err
 		}
 	}
@@ -84,8 +108,6 @@ func (dumper *AbstractDumper) execute(commandline string) error {
 
 	return nil
 }
-
-///////////////////////////////////////////////////////////////////////////////
 
 func (dumper *AbstractDumper) rootPath() string {
 	if len(dumper.configuration.Path) != 0 {
@@ -107,104 +129,6 @@ func (dumper *AbstractDumper) tmpPath() string {
 	return ""
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
-func (dumper *AbstractDumper) latestDumpFileName() string {
-	return fmt.Sprintf("%s%clatest", dumper.rootPath(), os.PathSeparator)
-}
-
-func (dumper *AbstractDumper) latestLogFileName() string {
-	return fmt.Sprintf("%s%clatest.log", dumper.rootPath(), os.PathSeparator)
-}
-
-func (dumper *AbstractDumper) latestChecksumFileName() string {
-	return fmt.Sprintf("%s%clatest.checksum", dumper.rootPath(), os.PathSeparator)
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-func (dumper *AbstractDumper) dailyPath() string {
-	return fmt.Sprintf("%s%cdaily", dumper.rootPath(), os.PathSeparator)
-}
-
-func (dumper *AbstractDumper) dailyName() string {
-	return dumper.time.Format("2006-01-02")
-}
-
-func (dumper *AbstractDumper) dailyDumpFileName() string {
-	return fmt.Sprintf("%s%c%s", dumper.dailyPath(), os.PathSeparator, dumper.dailyName())
-}
-
-func (dumper *AbstractDumper) dailyLogFileName() string {
-	return fmt.Sprintf("%s%c%s.log", dumper.dailyPath(), os.PathSeparator, dumper.dailyName())
-}
-
-func (dumper *AbstractDumper) dailyChecksumFileName() string {
-	return fmt.Sprintf("%s%c%s.checksum", dumper.dailyPath(), os.PathSeparator, dumper.dailyName())
-}
-
-func (dumper *AbstractDumper) dailyExists() bool {
-	_, err := os.Stat(dumper.dailyDumpFileName())
-	return err == nil || !errors.Is(err, os.ErrNotExist)
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-func (dumper *AbstractDumper) weeklyPath() string {
-	return fmt.Sprintf("%s%cweekly", dumper.rootPath(), os.PathSeparator)
-}
-
-func (dumper *AbstractDumper) weeklyName() string {
-	year, week := dumper.time.ISOWeek()
-	return fmt.Sprintf("%04d-%02d", year, week)
-}
-
-func (dumper *AbstractDumper) weeklyDumpFileName() string {
-	return fmt.Sprintf("%s%c%s", dumper.weeklyPath(), os.PathSeparator, dumper.weeklyName())
-}
-
-func (dumper *AbstractDumper) weeklyLogFileName() string {
-	return fmt.Sprintf("%s%c%s.log", dumper.weeklyPath(), os.PathSeparator, dumper.weeklyName())
-}
-
-func (dumper *AbstractDumper) weeklyChecksumName() string {
-	return fmt.Sprintf("%s%c%s.checksum", dumper.weeklyPath(), os.PathSeparator, dumper.weeklyName())
-}
-
-func (dumper *AbstractDumper) weeklyExists() bool {
-	_, err := os.Stat(dumper.dailyDumpFileName())
-	return err == nil || !errors.Is(err, os.ErrNotExist)
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-func (dumper *AbstractDumper) monthlyPath() string {
-	return fmt.Sprintf("%s%cmonthly", dumper.rootPath(), os.PathSeparator)
-}
-
-func (dumper *AbstractDumper) monthlyName() string {
-	return dumper.time.Format("2006-01")
-}
-
-func (dumper *AbstractDumper) monthlyDumpFileName() string {
-	return fmt.Sprintf("%s%c%s", dumper.monthlyPath(), os.PathSeparator, dumper.monthlyName())
-}
-
-func (dumper *AbstractDumper) monthlyLogFileName() string {
-	return fmt.Sprintf("%s%c%s.log", dumper.monthlyPath(), os.PathSeparator, dumper.monthlyName())
-}
-
-func (dumper *AbstractDumper) monthlyChecksumName() string {
-	return fmt.Sprintf("%s%c%s.checksum", dumper.monthlyPath(), os.PathSeparator, dumper.monthlyName())
-}
-
-func (dumper *AbstractDumper) monthlyExists() bool {
-	_, err := os.Stat(dumper.monthlyDumpFileName())
-	return err == nil || !errors.Is(err, os.ErrNotExist)
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
 func (dumper *AbstractDumper) tmpDumpFileName() string {
 	return fmt.Sprintf("%s%c%s", dumper.tmpPath(), os.PathSeparator, dumper.configuration.Name)
 }
@@ -216,32 +140,6 @@ func (dumper *AbstractDumper) tmpLogFileName() string {
 func (dumper *AbstractDumper) tmpChecksumFileName() string {
 	return fmt.Sprintf("%s%c%s.checksum", dumper.tmpPath(), os.PathSeparator, dumper.configuration.Name)
 }
-
-///////////////////////////////////////////////////////////////////////////////
-
-func (dumper *AbstractDumper) makeDirectories() error {
-	if err := makeDirectory(dumper.rootPath()); err != nil {
-		return err
-	}
-	if dumper.configuration.Daily {
-		if err := makeDirectory(dumper.dailyPath()); err != nil {
-			return err
-		}
-	}
-	if dumper.configuration.Weekly {
-		if err := makeDirectory(dumper.weeklyPath()); err != nil {
-			return err
-		}
-	}
-	if dumper.configuration.Monthly {
-		if err := makeDirectory(dumper.monthlyPath()); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-///////////////////////////////////////////////////////////////////////////////
 
 func (dumper *AbstractDumper) executeCommand(commandline string) error {
 	logFile, err := os.OpenFile(dumper.tmpLogFileName(), os.O_WRONLY|os.O_CREATE, 0644)
@@ -269,20 +167,18 @@ func (dumper *AbstractDumper) executeCommand(commandline string) error {
 	return nil
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
 func (dumper *AbstractDumper) calculateChecksums() error {
-	md5Hash, err := dumper.dumpHash(HashMD5)
+	md5Hash, err := fileChecksum(HashMD5, dumper.tmpDumpFileName())
 	if err != nil {
 		return err
 	}
 
-	sha1Hash, err := dumper.dumpHash(HashSha1)
+	sha1Hash, err := fileChecksum(HashSha1, dumper.tmpDumpFileName())
 	if err != nil {
 		return err
 	}
 
-	sha256Hash, err := dumper.dumpHash(HashSha256)
+	sha256Hash, err := fileChecksum(HashSha256, dumper.tmpDumpFileName())
 	if err != nil {
 		return err
 	}
@@ -296,102 +192,6 @@ func (dumper *AbstractDumper) calculateChecksums() error {
 	return nil
 }
 
-func (dumper *AbstractDumper) dumpHash(hashType string) (string, error) {
-	file, err := os.Open(dumper.tmpDumpFileName())
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-
-	var hasher hash.Hash
-	switch hashType {
-	case HashMD5:
-		hasher = md5.New()
-	case HashSha1:
-		hasher = sha1.New()
-	case HashSha256:
-		hasher = sha256.New()
-	default:
-		return "", errors.New("unknown hash type")
-	}
-
-	if _, err := io.Copy(hasher, file); err != nil {
-		return "", err
-	}
-
-	return hex.EncodeToString(hasher.Sum(nil)), nil
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-func (dumper *AbstractDumper) copyLatest() error {
-	if err := copyFile(dumper.tmpDumpFileName(), dumper.latestDumpFileName()); err != nil {
-		return err
-	}
-	if err := copyFile(dumper.tmpLogFileName(), dumper.latestLogFileName()); err != nil {
-		return err
-	}
-	if err := copyFile(dumper.tmpChecksumFileName(), dumper.latestChecksumFileName()); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (dumper *AbstractDumper) copyDaily() error {
-	if err := copyFile(dumper.tmpDumpFileName(), dumper.dailyDumpFileName()); err != nil {
-		return err
-	}
-	if err := copyFile(dumper.tmpLogFileName(), dumper.dailyLogFileName()); err != nil {
-		return err
-	}
-	if err := copyFile(dumper.tmpChecksumFileName(), dumper.dailyChecksumFileName()); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (dumper *AbstractDumper) copyWeekly() error {
-	if err := copyFile(dumper.tmpDumpFileName(), dumper.weeklyDumpFileName()); err != nil {
-		return err
-	}
-	if err := copyFile(dumper.tmpLogFileName(), dumper.weeklyLogFileName()); err != nil {
-		return err
-	}
-	if err := copyFile(dumper.tmpChecksumFileName(), dumper.weeklyChecksumName()); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (dumper *AbstractDumper) copyMonthly() error {
-	if err := copyFile(dumper.tmpDumpFileName(), dumper.monthlyDumpFileName()); err != nil {
-		return err
-	}
-	if err := copyFile(dumper.tmpLogFileName(), dumper.monthlyLogFileName()); err != nil {
-		return err
-	}
-	if err := copyFile(dumper.tmpChecksumFileName(), dumper.monthlyChecksumName()); err != nil {
-		return err
-	}
-	return nil
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-func (dumper *AbstractDumper) rotateDaily() error {
-	return nil //TODO
-}
-
-func (dumper *AbstractDumper) rotateWeekly() error {
-	return nil //TODO
-}
-
-func (dumper *AbstractDumper) rotateMonthly() error {
-	return nil //TODO
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
 func (dumper *AbstractDumper) clearTmpFiles() error {
 	if err := os.Remove(dumper.tmpDumpFileName()); err != nil {
 		return err
@@ -400,6 +200,94 @@ func (dumper *AbstractDumper) clearTmpFiles() error {
 		return err
 	}
 	if err := os.Remove(dumper.tmpChecksumFileName()); err != nil {
+		return err
+	}
+	return nil
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+type PeriodDump struct {
+	rootPath            string
+	name                string
+	tmpDumpFileName     string
+	tmpLogFileName      string
+	tmpChecksumFileName string
+	maxItemsCount       int
+	overwrite           bool
+}
+
+func (period *PeriodDump) dumpFileName() string {
+	return fmt.Sprintf("%s%c%s", period.rootPath, os.PathSeparator, period.name)
+}
+
+func (period *PeriodDump) logFileName() string {
+	return fmt.Sprintf("%s%c%s.log", period.rootPath, os.PathSeparator, period.name)
+}
+
+func (period *PeriodDump) checksumFileName() string {
+	return fmt.Sprintf("%s%c%s.checksum", period.rootPath, os.PathSeparator, period.name)
+}
+
+func (period *PeriodDump) exists() bool {
+	_, err := os.Stat(period.dumpFileName())
+	return err == nil || !errors.Is(err, os.ErrNotExist)
+}
+
+func (period *PeriodDump) rotate() error {
+	files, err := ioutil.ReadDir(period.rootPath)
+	if err != nil {
+		return err
+	}
+
+	logFileRegexp, err := regexp.Compile("^.+\\.log$")
+	if err != nil {
+		return err
+	}
+	checksumFileRegexp, err := regexp.Compile("^.+\\.checksum$")
+	if err != nil {
+		return err
+	}
+
+	var dumpFiles []string
+
+	for _, file := range files {
+		filename := file.Name()
+		if logFileRegexp.MatchString(filename) || checksumFileRegexp.MatchString(filename) {
+			continue
+		}
+		dumpFiles = append(dumpFiles, filename)
+	}
+
+	sort.Strings(dumpFiles)
+
+	for i := 0; i < len(dumpFiles)-period.maxItemsCount; i++ {
+		dumpFilePath := fmt.Sprintf("%s%c%s", period.rootPath, os.PathSeparator, dumpFiles[i])
+		if err := os.Remove(dumpFilePath); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (period *PeriodDump) execute() error {
+	if period.exists() && !period.overwrite {
+		return nil
+	}
+	if err := makeDirectory(period.rootPath); err != nil {
+		return err
+	}
+	if err := copyFile(period.tmpDumpFileName, period.dumpFileName()); err != nil {
+		return err
+	}
+	if err := copyFile(period.tmpLogFileName, period.logFileName()); err != nil {
+		return err
+	}
+	if err := copyFile(period.tmpChecksumFileName, period.checksumFileName()); err != nil {
+		return err
+	}
+	if err := period.rotate(); err != nil {
 		return err
 	}
 	return nil
@@ -434,4 +322,30 @@ func copyFile(src, dest string) error {
 	}
 
 	return nil
+}
+
+func fileChecksum(hashType, filePath string) (string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	var hasher hash.Hash
+	switch hashType {
+	case HashMD5:
+		hasher = md5.New()
+	case HashSha1:
+		hasher = sha1.New()
+	case HashSha256:
+		hasher = sha256.New()
+	default:
+		return "", errors.New("unknown hash type")
+	}
+
+	if _, err := io.Copy(hasher, file); err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(hasher.Sum(nil)), nil
 }
