@@ -1,0 +1,74 @@
+#Global configuration
+global:
+  #Directory for dumps
+  path: "dump"
+  #Directory for temporary files
+  tmpPath: "tmp"
+  #download: https://www.postgresql.org/download/
+  pgdumpExecutable: "pg_dump"
+  #download: https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu2004-x86_64-100.5.2.tgz
+  mongodump5Executable: "/mongodb5/bin/mongodump"
+  #download: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1604-4.0.28.tgz
+  mongodump4Executable: "/mongodb4/bin/mongodump"
+
+#Send notifications to mattermost channel
+notification:
+  enabled: yes
+  url: "https://example.com/hooks/******"
+  channel: "backup"
+  username: "box"
+  iconEmoji: ":package:"
+
+dumps:
+  #PostgreSQL
+  - type: "postgres"
+    name: "postgres_database"
+    #connection parameters
+    vars:
+      host: "localhost"
+      port: 5432
+      username: "helloworld"
+      password: "hunter2"
+      dbname: "helloworld"
+    #save daily dumps
+    daily: yes
+    #keep daily dumps for days
+    days: 14
+    #save weekly dumps
+    weekly: yes
+    #keep weekly dumps for weeks
+    weeks: 8
+    #save monthly dumps
+    monthly: yes
+    #keep monthly dumps for months
+    months: -1
+
+  #MongoDB 5.0-4.0
+  - type: "mongo"
+    name: "mongodb_database"
+    vars:
+      host: "localhost"
+      port: 27017
+      username: "admin"
+      password: "admin"
+      authenticationDatabase: "admin"
+      db: "helloworld"
+    daily: yes
+    days: 14
+    weekly: no
+    monthly: no
+
+  #MongoDB 4.0-2.6
+  - type: "mongo_legacy"
+    name: "mongodb_legacy_database"
+    vars:
+      host: "localhost"
+      port: 27017
+      username: "admin"
+      password: "admin"
+      authenticationDatabase: "admin"
+      db: "helloworld"
+    daily: yes
+    days: 10
+    weekly: yes
+    weeks: 5

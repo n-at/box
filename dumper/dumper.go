@@ -60,7 +60,7 @@ func (dumper *AbstractDumper) execute(commandline string) error {
 		tmpDumpFileName:     dumper.tmpDumpFileName(),
 		tmpLogFileName:      dumper.tmpLogFileName(),
 		tmpChecksumFileName: dumper.tmpChecksumFileName(),
-		maxItemsCount:       1,
+		maxItemsCount:       -1,
 		overwrite:           true,
 	}
 	if err := latest.execute(); err != nil {
@@ -125,7 +125,7 @@ func (dumper *AbstractDumper) rootPath() string {
 		return dumper.configuration.Path
 	}
 	if len(dumper.globalConfiguration.Path) != 0 {
-		return dumper.globalConfiguration.Path
+		return fmt.Sprintf("%s%c%s", dumper.globalConfiguration.Path, os.PathSeparator, dumper.configuration.Name)
 	}
 	return ""
 }
@@ -246,6 +246,10 @@ func (period *PeriodDump) exists() bool {
 }
 
 func (period *PeriodDump) rotate() error {
+	if period.maxItemsCount < 0 {
+		return nil
+	}
+
 	files, err := ioutil.ReadDir(period.rootPath)
 	if err != nil {
 		return err

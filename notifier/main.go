@@ -78,23 +78,21 @@ func (notifier *Notifier) Notify(status Status, dumperName string, message strin
 		Attachments: []mattermostMessageAttachment{attachment},
 	}
 
-	go func() {
-		notificationJson, err := json.Marshal(notification)
-		if err != nil {
-			log.Errorf("unable to marshal notification: %s", err)
-			return
-		}
+	notificationJson, err := json.Marshal(notification)
+	if err != nil {
+		log.Errorf("unable to marshal notification: %s", err)
+		return
+	}
 
-		response, err := http.Post(notifier.Configuration.Url, "application/json", bytes.NewBuffer(notificationJson))
-		if err != nil {
-			log.Errorf("unable to send notification: %s", err)
-		}
-		defer response.Body.Close()
+	response, err := http.Post(notifier.Configuration.Url, "application/json", bytes.NewBuffer(notificationJson))
+	if err != nil {
+		log.Errorf("unable to send notification: %s", err)
+	}
+	defer response.Body.Close()
 
-		if response.StatusCode != http.StatusOK {
-			log.Errorf("notification status: %d", response.StatusCode)
-		}
-	}()
+	if response.StatusCode != http.StatusOK {
+		log.Errorf("notification status: %d", response.StatusCode)
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -102,11 +100,11 @@ func (notifier *Notifier) Notify(status Status, dumperName string, message strin
 func statusColor(status Status) string {
 	switch status {
 	case StatusSuccess:
-		return "#00FF00"
+		return "#00AA00"
 	case StatusInfo:
-		return "#0000FF"
+		return "#0000AA"
 	case StatusError:
-		return "#FF0000"
+		return "#AA0000"
 	default:
 		return "#888888"
 	}

@@ -31,8 +31,8 @@ func init() {
 	globalConfiguration = dumper.GlobalConfiguration{
 		Path:                 "dumps",
 		PgdumpExecutable:     "pg_dump",
-		Mongodump5Executable: "mongodump",
-		Mongodump4Executable: "mongodump",
+		Mongodump5Executable: "/mongodb5/bin/mongodump",
+		Mongodump4Executable: "/mongodb4/bin/mongodump",
 	}
 	if err := viper.UnmarshalKey("global", &globalConfiguration); err != nil {
 		log.Fatalf("unable to read global configuration: %s", err)
@@ -55,25 +55,25 @@ func main() {
 		var err error
 
 		switch configuration.Type {
-		case "postgres":
+		case dumper.TypePostgres:
 			d, err = dumper.NewPostgres(globalConfiguration, configuration)
-		case "mongo":
+		case dumper.TypeMongo:
 			d, err = dumper.NewMongo5(globalConfiguration, configuration)
-		case "mongo_legacy":
+		case dumper.TypeMongoLegacy:
 			d, err = dumper.NewMongo4(globalConfiguration, configuration)
 		default:
-			err = errors.New("unknown dumper type: " + configuration.Type)
+			err = errors.New("unknown dumper type")
 		}
 		if err != nil {
 			log.Errorf("unable to create dumper: %s", err)
 		}
 
-		n.Notify(notifier.StatusInfo, configuration.Name, "starting backup")
+		n.Notify(notifier.StatusInfo, configuration.Name, "starting dump")
 
 		if err := d.Dump(); err != nil {
 			n.Notify(notifier.StatusError, configuration.Name, err.Error())
 		} else {
-			n.Notify(notifier.StatusSuccess, configuration.Name, "done")
+			n.Notify(notifier.StatusSuccess, configuration.Name, "dump done")
 		}
 	}
 }

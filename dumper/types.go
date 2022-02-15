@@ -3,9 +3,9 @@ package dumper
 type Type string
 
 const (
-	TypePostgres Type = "postgres"
-	TypeMongo    Type = "mongo"
-	TypeFirebird Type = "firebird"
+	TypePostgres    Type = "postgres"
+	TypeMongo       Type = "mongo"
+	TypeMongoLegacy Type = "mongo_legacy"
 )
 
 type GlobalConfiguration struct {
