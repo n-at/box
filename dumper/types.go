@@ -3,9 +3,10 @@ package dumper
 type Type string
 
 const (
-	TypePostgres    Type = "postgres"
-	TypeMongo       Type = "mongo"
-	TypeMongoLegacy Type = "mongo_legacy"
+	TypePostgres       Type = "postgres"
+	TypeMongo          Type = "mongo"
+	TypeMongoLegacy    Type = "mongo_legacy"
+	TypeFirebirdLegacy Type = "firebird_legacy"
 )
 
 type GlobalConfiguration struct {
@@ -14,6 +15,7 @@ type GlobalConfiguration struct {
 	PgdumpExecutable     string
 	Mongodump5Executable string
 	Mongodump4Executable string
+	GbakExecutable       string
 }
 
 type Configuration struct {

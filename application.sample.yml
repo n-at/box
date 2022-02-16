@@ -10,6 +10,8 @@ global:
   mongodump5Executable: "/mongodb5/bin/mongodump"
   #download: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1604-4.0.28.tgz
   mongodump4Executable: "/mongodb4/bin/mongodump"
+  #download: https://github.com/FirebirdSQL/firebird/releases/tag/R2_5_9
+  gbakExecutable: "/opt/firebird/bin/gbak"
 
 #Send notifications to mattermost channel
 notification:
@@ -72,3 +74,14 @@ dumps:
     days: 10
     weekly: yes
     weeks: 5
+
+  #Firebird 2.5
+  - type: "firebird_legacy"
+    name: "firebird_database"
+    vars:
+      host: "localhost"
+      username: "SYSDBA"
+      password: "masterkey"
+      db: "/sqlbase/database.fdb"
+    daily: yes
+    days: 14
