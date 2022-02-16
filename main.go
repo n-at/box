@@ -33,7 +33,7 @@ func init() {
 		PgdumpExecutable:     "pg_dump",
 		Mongodump5Executable: "/mongodb5/bin/mongodump",
 		Mongodump4Executable: "/mongodb4/bin/mongodump",
-		GbakExecutable:       "/firebird/bin/gbak",
+		GbakExecutable:       "/opt/firebird/bin/gbak",
 	}
 	if err := viper.UnmarshalKey("global", &globalConfiguration); err != nil {
 		log.Fatalf("unable to read global configuration: %s", err)
