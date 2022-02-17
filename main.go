@@ -69,6 +69,7 @@ func main() {
 		}
 		if err != nil {
 			log.Errorf("unable to create dumper: %s", err)
+			continue
 		}
 
 		n.Notify(notifier.StatusInfo, configuration.Name, "starting dump")

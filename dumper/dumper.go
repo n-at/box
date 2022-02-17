@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"hash"
 	"io"
 	"io/ioutil"
@@ -47,16 +48,24 @@ func (dumper *AbstractDumper) execute(commandline string) error {
 		return errors.New("dumper tmp path not defined")
 	}
 
+	log.Infof("%s: staring", dumper.configuration.Name)
+
 	if err := dumper.executeCommand(commandline); err != nil {
 		return err
 	}
+
+	log.Infof("%s: execution done", dumper.configuration.Name)
+
 	if err := dumper.calculateChecksums(); err != nil {
 		return err
 	}
 
+	log.Infof("%s: checksums calculated", dumper.configuration.Name)
+
 	latest := PeriodDump{
+		name:                dumper.configuration.Name,
 		rootPath:            dumper.rootPath(),
-		name:                "latest",
+		fileName:            "latest",
 		tmpDumpFileName:     dumper.tmpDumpFileName(),
 		tmpLogFileName:      dumper.tmpLogFileName(),
 		tmpChecksumFileName: dumper.tmpChecksumFileName(),
@@ -69,8 +78,9 @@ func (dumper *AbstractDumper) execute(commandline string) error {
 
 	if dumper.configuration.Daily {
 		daily := PeriodDump{
+			name:                dumper.configuration.Name,
 			rootPath:            fmt.Sprintf("%s%c%s", dumper.rootPath(), os.PathSeparator, "daily"),
-			name:                dumper.time.Format("2006-01-02"),
+			fileName:            dumper.time.Format("2006-01-02"),
 			tmpDumpFileName:     dumper.tmpDumpFileName(),
 			tmpLogFileName:      dumper.tmpLogFileName(),
 			tmpChecksumFileName: dumper.tmpChecksumFileName(),
@@ -85,8 +95,9 @@ func (dumper *AbstractDumper) execute(commandline string) error {
 	if dumper.configuration.Weekly {
 		year, week := dumper.time.ISOWeek()
 		weekly := PeriodDump{
+			name:                dumper.configuration.Name,
 			rootPath:            fmt.Sprintf("%s%c%s", dumper.rootPath(), os.PathSeparator, "weekly"),
-			name:                fmt.Sprintf("%04d-%02d", year, week),
+			fileName:            fmt.Sprintf("%04d-%02d", year, week),
 			tmpDumpFileName:     dumper.tmpDumpFileName(),
 			tmpLogFileName:      dumper.tmpLogFileName(),
 			tmpChecksumFileName: dumper.tmpChecksumFileName(),
@@ -101,7 +112,7 @@ func (dumper *AbstractDumper) execute(commandline string) error {
 	if dumper.configuration.Monthly {
 		monthly := PeriodDump{
 			rootPath:            fmt.Sprintf("%s%c%s", dumper.rootPath(), os.PathSeparator, "monthly"),
-			name:                dumper.time.Format("2006-01"),
+			fileName:            dumper.time.Format("2006-01"),
 			tmpDumpFileName:     dumper.tmpDumpFileName(),
 			tmpLogFileName:      dumper.tmpLogFileName(),
 			tmpChecksumFileName: dumper.tmpChecksumFileName(),
@@ -116,6 +127,8 @@ func (dumper *AbstractDumper) execute(commandline string) error {
 	if err := dumper.clearTmpFiles(); err != nil {
 		return err
 	}
+
+	log.Infof("%s: done", dumper.configuration.Name)
 
 	return nil
 }
@@ -219,8 +232,9 @@ func (dumper *AbstractDumper) clearTmpFiles() error {
 ///////////////////////////////////////////////////////////////////////////////
 
 type PeriodDump struct {
-	rootPath            string
 	name                string
+	rootPath            string
+	fileName            string
 	tmpDumpFileName     string
 	tmpLogFileName      string
 	tmpChecksumFileName string
@@ -229,15 +243,15 @@ type PeriodDump struct {
 }
 
 func (period *PeriodDump) dumpFileName() string {
-	return fmt.Sprintf("%s%c%s", period.rootPath, os.PathSeparator, period.name)
+	return fmt.Sprintf("%s%c%s", period.rootPath, os.PathSeparator, period.fileName)
 }
 
 func (period *PeriodDump) logFileName() string {
-	return fmt.Sprintf("%s%c%s.log", period.rootPath, os.PathSeparator, period.name)
+	return fmt.Sprintf("%s%c%s.log", period.rootPath, os.PathSeparator, period.fileName)
 }
 
 func (period *PeriodDump) checksumFileName() string {
-	return fmt.Sprintf("%s%c%s.checksum", period.rootPath, os.PathSeparator, period.name)
+	return fmt.Sprintf("%s%c%s.checksum", period.rootPath, os.PathSeparator, period.fileName)
 }
 
 func (period *PeriodDump) exists() bool {
@@ -279,7 +293,15 @@ func (period *PeriodDump) rotate() error {
 	for i := 0; i < len(dumpFiles)-period.maxItemsCount; i++ {
 		dumpFilePath := fmt.Sprintf("%s%c%s", period.rootPath, os.PathSeparator, dumpFiles[i])
 		if err := os.Remove(dumpFilePath); err != nil {
-			return err
+			log.Errorf("%s %s: unable to delete dump file: %s", period.name, period.fileName, err)
+		}
+		dumpChecksumPath := fmt.Sprintf("%s%c%s.checksum", period.rootPath, os.PathSeparator, dumpFiles[i])
+		if err := os.Remove(dumpChecksumPath); err != nil {
+			log.Errorf("%s %s: unable to delete checksum file: %s", period.name, period.fileName, err)
+		}
+		dumpLogPath := fmt.Sprintf("%s%c%s.log", period.rootPath, os.PathSeparator, dumpFiles[i])
+		if err := os.Remove(dumpLogPath); err != nil {
+			log.Errorf("%s %s: unable to delete log file: %s", period.name, period.fileName, err)
 		}
 	}
 
@@ -288,8 +310,10 @@ func (period *PeriodDump) rotate() error {
 
 func (period *PeriodDump) execute() error {
 	if period.exists() && !period.overwrite {
+		log.Infof("%s %s: already exists, skipping", period.name, period.fileName)
 		return nil
 	}
+
 	if err := makeDirectory(period.rootPath); err != nil {
 		return err
 	}
@@ -305,6 +329,9 @@ func (period *PeriodDump) execute() error {
 	if err := period.rotate(); err != nil {
 		return err
 	}
+
+	log.Infof("%s %s: done", period.name, period.fileName)
+
 	return nil
 }
 
