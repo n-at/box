@@ -2,8 +2,6 @@ package dumper
 
 import (
 	"errors"
-	"fmt"
-	"strings"
 	"time"
 )
 
@@ -28,8 +26,6 @@ func NewMongo4(global GlobalConfiguration, local Configuration) (*Mongo4Dumper, 
 }
 
 func (dumper *Mongo4Dumper) Dump() error {
-	stringBuilder := strings.Builder{}
-
 	//https://docs.mongodb.com/v4.0/reference/program/mongodump/
 	//Compatible with MongoDB 4.0-2.6
 	//Example configuration:
@@ -40,21 +36,7 @@ func (dumper *Mongo4Dumper) Dump() error {
 	//authenticationDatabase: "admin"
 	//db: "users"
 
-	outputDirectory := dumper.tmpDumpFileName() + "_dump"
+	commandline := buildMongoCommandline(dumper.globalConfiguration.Mongodump4Executable, dumper.tmpDumpFileName(), dumper.configuration.Vars)
 
-	stringBuilder.WriteString(fmt.Sprintf("\"%s\" ", esc(dumper.globalConfiguration.Mongodump5Executable)))
-	stringBuilder.WriteString("--verbose ")
-	stringBuilder.WriteString(fmt.Sprintf("--out=\"%s\" ", esc(outputDirectory)))
-
-	for key, value := range dumper.configuration.Vars {
-		if key == "verbose" || key == "archive" || key == "out" {
-			continue
-		}
-		stringBuilder.WriteString(fmt.Sprintf("--%s=\"%s\" ", key, esc(value)))
-	}
-
-	stringBuilder.WriteString(fmt.Sprintf("&& tar -cvzf \"%s\" --directory \"%s\" . ", esc(dumper.tmpDumpFileName()), esc(outputDirectory)))
-	stringBuilder.WriteString(fmt.Sprintf("&& rm --verbose --recursive --force \"%s\" ", esc(outputDirectory)))
-
-	return dumper.execute(stringBuilder.String())
+	return dumper.execute(commandline)
 }
