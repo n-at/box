@@ -1,6 +1,6 @@
-# box - make dumps of PostgreSQL and MongoDB databases
+# box - make dumps of databases
 
-Make database dumps and store daily, weekly and monthly dumps. Supported databases:
+Make database dumps and store daily, weekly and monthly. Supported databases:
 
 * PostgreSQL 9-14
 * MongoDB 2.6-4.0
