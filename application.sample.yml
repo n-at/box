@@ -4,8 +4,10 @@ global:
   path: "dump"
   #Directory for temporary files
   tmpPath: "tmp"
-  #Shell executable location
+  #Shell (sh) executable location
   shExecutable: "sh"
+  #tar executable location
+  tarExecutable: "tar"
   #download: https://www.postgresql.org/download/
   pgdumpExecutable: "pg_dump"
   #download: https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu2004-x86_64-100.5.2.tgz
@@ -85,5 +87,14 @@ dumps:
       username: "SYSDBA"
       password: "masterkey"
       db: "/sqlbase/database.fdb"
+    daily: true
+    days: 14
+
+  #dump directory
+  - type: "tar"
+    name: "tar_archive"
+    vars:
+      path: "/directory/location"
+      compress: "none|bzip2|gzip|lzma|xz"
     daily: true
     days: 14

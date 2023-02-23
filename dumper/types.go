@@ -7,6 +7,7 @@ const (
 	TypeMongo          Type = "mongo"
 	TypeMongoLegacy    Type = "mongo_legacy"
 	TypeFirebirdLegacy Type = "firebird_legacy"
+	TypeTar            Type = "tar"
 )
 
 type GlobalConfiguration struct {
@@ -17,6 +18,7 @@ type GlobalConfiguration struct {
 	Mongodump5Executable string
 	Mongodump4Executable string
 	GbakExecutable       string
+	TarExecutable        string
 }
 
 type Configuration struct {

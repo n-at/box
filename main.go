@@ -36,6 +36,7 @@ func init() {
 		Mongodump5Executable: "/mongodb5/bin/mongodump",
 		Mongodump4Executable: "/mongodb4/bin/mongodump",
 		GbakExecutable:       "/opt/firebird/bin/gbak",
+		TarExecutable:        "tar",
 	}
 	if err := viper.UnmarshalKey("global", &globalConfiguration); err != nil {
 		log.Fatalf("unable to read global configuration: %s", err)
@@ -88,11 +89,13 @@ func main() {
 			d, err = dumper.NewMongo4(globalConfiguration, configuration)
 		case dumper.TypeFirebirdLegacy:
 			d, err = dumper.NewFirebirdLegacy(globalConfiguration, configuration)
+		case dumper.TypeTar:
+			d, err = dumper.NewTar(globalConfiguration, configuration)
 		default:
 			err = errors.New("unknown dumper type")
 		}
 		if err != nil {
-			log.Errorf("unable to create dumper: %s", err)
+			log.Errorf("%s (%s) unable to create dumper: %s", configuration.Name, configuration.Type, err)
 			continue
 		}
 
