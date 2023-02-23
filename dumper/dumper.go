@@ -159,7 +159,7 @@ func (dumper *AbstractDumper) executeCommand(commandline string) error {
 	}
 	defer logFile.Close()
 
-	cmd := exec.Command("sh", "-c", commandline)
+	cmd := exec.Command(dumper.globalConfiguration.ShExecutable, "-c", commandline)
 	cmd.Stdout = logFile
 	cmd.Stderr = logFile
 

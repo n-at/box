@@ -4,6 +4,8 @@ global:
   path: "dump"
   #Directory for temporary files
   tmpPath: "tmp"
+  #Shell executable location
+  shExecutable: "sh"
   #download: https://www.postgresql.org/download/
   pgdumpExecutable: "pg_dump"
   #download: https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu2004-x86_64-100.5.2.tgz

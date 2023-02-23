@@ -31,6 +31,7 @@ func init() {
 	}
 	globalConfiguration = dumper.GlobalConfiguration{
 		Path:                 "dumps",
+		ShExecutable:         "sh",
 		PgdumpExecutable:     "pg_dump",
 		Mongodump5Executable: "/mongodb5/bin/mongodump",
 		Mongodump4Executable: "/mongodb4/bin/mongodump",

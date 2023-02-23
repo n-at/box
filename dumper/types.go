@@ -12,6 +12,7 @@ const (
 type GlobalConfiguration struct {
 	Path                 string
 	TmpPath              string
+	ShExecutable         string
 	PgdumpExecutable     string
 	Mongodump5Executable string
 	Mongodump4Executable string
