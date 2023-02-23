@@ -2,9 +2,9 @@
 
 Make database dumps and store daily, weekly and monthly. Supported databases:
 
-* PostgreSQL 9-14
+* PostgreSQL 9-15
 * MongoDB 2.6-4.0
-* MongoDB 4.0-5.0
+* MongoDB 4.0-6.0
 * Firebird 2.5
 
 ## Build
