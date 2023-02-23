@@ -17,7 +17,7 @@ global:
 
 #Send notifications to mattermost channel
 notification:
-  enabled: yes
+  enabled: false
   url: "https://example.com/hooks/******"
   channel: "backup"
   username: "box"
@@ -35,15 +35,15 @@ dumps:
       password: "hunter2"
       dbname: "helloworld"
     #save daily dumps
-    daily: yes
+    daily: true
     #keep daily dumps for days
     days: 14
     #save weekly dumps
-    weekly: yes
+    weekly: true
     #keep weekly dumps for weeks
     weeks: 8
     #save monthly dumps
-    monthly: yes
+    monthly: true
     #keep monthly dumps for months
     months: -1
 
@@ -57,10 +57,10 @@ dumps:
       password: "admin"
       authenticationDatabase: "admin"
       db: "helloworld"
-    daily: yes
+    daily: true
     days: 14
-    weekly: no
-    monthly: no
+    weekly: false
+    monthly: false
 
   #MongoDB 4.0-2.6
   - type: "mongo_legacy"
@@ -72,9 +72,9 @@ dumps:
       password: "admin"
       authenticationDatabase: "admin"
       db: "helloworld"
-    daily: yes
+    daily: true
     days: 10
-    weekly: yes
+    weekly: true
     weeks: 5
 
   #Firebird 2.5
@@ -85,5 +85,5 @@ dumps:
       username: "SYSDBA"
       password: "masterkey"
       db: "/sqlbase/database.fdb"
-    daily: yes
+    daily: true
     days: 14

@@ -60,7 +60,19 @@ func main() {
 		log.Fatalf("unable to create tmp dump path: %s", err)
 	}
 
+	dumpsFilter := make(map[string]bool)
+	for i, arg := range os.Args {
+		if i == 0 {
+			continue
+		}
+		dumpsFilter[arg] = true
+	}
+
 	for _, configuration := range dumpConfiguration {
+		if len(dumpsFilter) > 0 && !dumpsFilter[configuration.Name] {
+			continue
+		}
+
 		var d dumper.Dumper
 		var err error
 
