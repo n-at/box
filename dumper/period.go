@@ -12,6 +12,7 @@ import (
 
 type PeriodDump struct {
 	name                string
+	dumpType            Type
 	rootPath            string
 	fileName            string
 	tmpDumpFileName     string
@@ -72,15 +73,15 @@ func (period *PeriodDump) rotate() error {
 	for i := 0; i < len(dumpFiles)-period.maxItemsCount; i++ {
 		dumpFilePath := fmt.Sprintf("%s%c%s", period.rootPath, os.PathSeparator, dumpFiles[i])
 		if err := os.Remove(dumpFilePath); err != nil {
-			log.Errorf("%s %s: unable to delete dump file: %s", period.name, period.fileName, err)
+			log.Errorf("%s (%s) %s: unable to delete dump file: %s", period.name, period.dumpType, period.fileName, err)
 		}
 		dumpChecksumPath := fmt.Sprintf("%s%c%s.checksum", period.rootPath, os.PathSeparator, dumpFiles[i])
 		if err := os.Remove(dumpChecksumPath); err != nil {
-			log.Errorf("%s %s: unable to delete checksum file: %s", period.name, period.fileName, err)
+			log.Errorf("%s (%s) %s: unable to delete checksum file: %s", period.name, period.dumpType, period.fileName, err)
 		}
 		dumpLogPath := fmt.Sprintf("%s%c%s.log", period.rootPath, os.PathSeparator, dumpFiles[i])
 		if err := os.Remove(dumpLogPath); err != nil {
-			log.Errorf("%s %s: unable to delete log file: %s", period.name, period.fileName, err)
+			log.Errorf("%s (%s) %s: unable to delete log file: %s", period.name, period.dumpType, period.fileName, err)
 		}
 	}
 
@@ -89,7 +90,7 @@ func (period *PeriodDump) rotate() error {
 
 func (period *PeriodDump) execute() error {
 	if period.exists() && !period.overwrite {
-		log.Infof("%s %s: already exists, skipping", period.name, period.fileName)
+		log.Infof("%s (%s) %s: already exists, skipping", period.name, period.dumpType, period.fileName)
 		return nil
 	}
 
@@ -109,7 +110,7 @@ func (period *PeriodDump) execute() error {
 		return err
 	}
 
-	log.Infof("%s %s: done", period.name, period.fileName)
+	log.Infof("%s (%s) %s: done", period.name, period.dumpType, period.fileName)
 
 	return nil
 }

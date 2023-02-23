@@ -47,6 +47,7 @@ func (dumper *AbstractDumper) execute(commandline string) error {
 	log.Infof("%s (%s) copy latest dump...", dumper.configuration.Name, dumper.configuration.Type)
 	latest := PeriodDump{
 		name:                dumper.configuration.Name,
+		dumpType:            dumper.configuration.Type,
 		rootPath:            dumper.rootPath(),
 		fileName:            "latest",
 		tmpDumpFileName:     dumper.tmpDumpFileName(),
@@ -63,6 +64,7 @@ func (dumper *AbstractDumper) execute(commandline string) error {
 		log.Infof("%s (%s) copy daily dump...", dumper.configuration.Name, dumper.configuration.Type)
 		daily := PeriodDump{
 			name:                dumper.configuration.Name,
+			dumpType:            dumper.configuration.Type,
 			rootPath:            fmt.Sprintf("%s%c%s", dumper.rootPath(), os.PathSeparator, "daily"),
 			fileName:            dumper.time.Format("2006-01-02"),
 			tmpDumpFileName:     dumper.tmpDumpFileName(),
@@ -81,6 +83,7 @@ func (dumper *AbstractDumper) execute(commandline string) error {
 		year, week := dumper.time.ISOWeek()
 		weekly := PeriodDump{
 			name:                dumper.configuration.Name,
+			dumpType:            dumper.configuration.Type,
 			rootPath:            fmt.Sprintf("%s%c%s", dumper.rootPath(), os.PathSeparator, "weekly"),
 			fileName:            fmt.Sprintf("%04d-%02d", year, week),
 			tmpDumpFileName:     dumper.tmpDumpFileName(),
@@ -97,6 +100,8 @@ func (dumper *AbstractDumper) execute(commandline string) error {
 	if dumper.configuration.Monthly {
 		log.Infof("%s (%s) copy monthly dump...", dumper.configuration.Name, dumper.configuration.Type)
 		monthly := PeriodDump{
+			name:                dumper.configuration.Name,
+			dumpType:            dumper.configuration.Type,
 			rootPath:            fmt.Sprintf("%s%c%s", dumper.rootPath(), os.PathSeparator, "monthly"),
 			fileName:            dumper.time.Format("2006-01"),
 			tmpDumpFileName:     dumper.tmpDumpFileName(),
