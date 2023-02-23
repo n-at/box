@@ -63,6 +63,9 @@ func main() {
 		var d dumper.Dumper
 		var err error
 
+		log.Infof("%s (%s), daily: %v, weekly: %v, monthly: %v",
+			configuration.Name, configuration.Type, configuration.Daily, configuration.Weekly, configuration.Monthly)
+
 		switch configuration.Type {
 		case dumper.TypePostgres:
 			d, err = dumper.NewPostgres(globalConfiguration, configuration)
@@ -83,8 +86,10 @@ func main() {
 		n.Notify(notifier.StatusInfo, configuration.Name, "starting dump")
 
 		if err := d.Dump(); err != nil {
+			log.Errorf("%s (%s) dump error: %s", configuration.Name, configuration.Type, err)
 			n.Notify(notifier.StatusError, configuration.Name, err.Error())
 		} else {
+			log.Infof("%s (%s) dump done", configuration.Name, configuration.Type)
 			n.Notify(notifier.StatusSuccess, configuration.Name, "dump done")
 		}
 	}
