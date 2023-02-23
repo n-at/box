@@ -4,6 +4,7 @@ import (
 	"box/dumper"
 	"box/notifier"
 	"errors"
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"os"
@@ -51,6 +52,13 @@ func main() {
 		Configuration: notificationConfiguration,
 	}
 
+	if err := ensureDirectoryExists(globalConfiguration.Path); err != nil {
+		log.Fatalf("unable to create dump path: %s", err)
+	}
+	if err := ensureDirectoryExists(globalConfiguration.TmpPath); err != nil {
+		log.Fatalf("unable to create tmp dump path: %s", err)
+	}
+
 	for _, configuration := range dumpConfiguration {
 		var d dumper.Dumper
 		var err error
@@ -79,5 +87,24 @@ func main() {
 		} else {
 			n.Notify(notifier.StatusSuccess, configuration.Name, "dump done")
 		}
+	}
+}
+
+func ensureDirectoryExists(path string) error {
+	info, err := os.Stat(path)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			if err := os.MkdirAll(path, 0777); err != nil {
+				return err
+			} else {
+				return nil
+			}
+		}
+		return err
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("'%s' is not a directory", path)
+	} else {
+		return nil
 	}
 }
