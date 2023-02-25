@@ -33,6 +33,7 @@ func init() {
 		Path:                 "dumps",
 		ShExecutable:         "sh",
 		PgdumpExecutable:     "pg_dump",
+		MysqldumpExecutable:  "mysqldump",
 		Mongodump5Executable: "/mongodb5/bin/mongodump",
 		Mongodump4Executable: "/mongodb4/bin/mongodump",
 		GbakExecutable:       "/opt/firebird/bin/gbak",
@@ -89,6 +90,8 @@ func main() {
 			d, err = dumper.NewMongo4(globalConfiguration, configuration)
 		case dumper.TypeFirebirdLegacy:
 			d, err = dumper.NewFirebirdLegacy(globalConfiguration, configuration)
+		case dumper.TypeMysql:
+			d, err = dumper.NewMysql(globalConfiguration, configuration)
 		case dumper.TypeTar:
 			d, err = dumper.NewTar(globalConfiguration, configuration)
 		default:

@@ -4,6 +4,7 @@ type Type string
 
 const (
 	TypePostgres       Type = "postgres"
+	TypeMysql          Type = "mysql"
 	TypeMongo          Type = "mongo"
 	TypeMongoLegacy    Type = "mongo_legacy"
 	TypeFirebirdLegacy Type = "firebird_legacy"
@@ -15,6 +16,7 @@ type GlobalConfiguration struct {
 	TmpPath              string
 	ShExecutable         string
 	PgdumpExecutable     string
+	MysqldumpExecutable  string
 	Mongodump5Executable string
 	Mongodump4Executable string
 	GbakExecutable       string

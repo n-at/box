@@ -10,6 +10,8 @@ global:
   tarExecutable: "tar"
   #download: https://www.postgresql.org/download/
   pgdumpExecutable: "pg_dump"
+  #download: https://mirror.truenetwork.ru/mariadb//mariadb-10.11.2/bintar-linux-systemd-x86_64/mariadb-10.11.2-linux-systemd-x86_64.tar.gz
+  mysqldumpExecutable: "mysqldump"
   #download: https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu2004-x86_64-100.5.2.tgz
   mongodump5Executable: "/mongodb5/bin/mongodump"
   #download: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1604-4.0.28.tgz
@@ -89,6 +91,16 @@ dumps:
       db: "/sqlbase/database.fdb"
     daily: true
     days: 14
+
+  #MySQL / MariaDB
+  - type: "mysql"
+    name: "mysql_database"
+    vars:
+      host: "localhost"
+      port: 3306
+      user: "helloworld"
+      password: "hunter2"
+      databases: "helloworld"
 
   #dump directory
   - type: "tar"
