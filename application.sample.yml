@@ -114,6 +114,7 @@ dumps:
   - type: "tar"
     name: "tar_archive"
     vars:
+      #any tar keys, excluding verbose, create, directory
       path: "/directory/location"
       compress: "none|bzip2|gzip|lzma|xz"
     daily: true

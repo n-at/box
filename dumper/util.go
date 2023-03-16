@@ -95,3 +95,11 @@ func formatFileSize(size int64) string {
 	}
 	return fmt.Sprintf("%.2f GB", floatSize/1024.0)
 }
+
+func formatParam(key, value string) string {
+	if len(value) != 0 {
+		return fmt.Sprintf("--%s=\"%s\"", key, esc(value))
+	} else {
+		return fmt.Sprintf("--%s", key)
+	}
+}

@@ -49,7 +49,8 @@ func (d *MysqlDumper) Dump() error {
 		if key == "verbose" || key == "help" || key == "databases" || key == "all-databases" || key == "database" {
 			continue
 		}
-		sb.WriteString(fmt.Sprintf("--%s=\"%s\" ", key, esc(value)))
+		sb.WriteString(formatParam(key, value))
+		sb.WriteString(" ")
 	}
 
 	sb.WriteString(fmt.Sprintf(" \"%s\" | gzip > \"%s\"", esc(database), esc(d.tmpDumpFileName())))

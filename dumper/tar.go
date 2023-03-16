@@ -79,6 +79,14 @@ func (d *TarDumper) Dump() error {
 		sb.WriteString(fmt.Sprintf("--directory \"%s\" ", esc(directory)))
 	}
 
+	for key, value := range vars {
+		if key == "path" || key == "compress" || key == "verbose" || key == "create" || key == "directory" {
+			continue
+		}
+		sb.WriteString(formatParam(key, value))
+		sb.WriteString(" ")
+	}
+
 	sb.WriteString(fmt.Sprintf("\"%s\"", esc(targetFile)))
 
 	return d.execute(sb.String())

@@ -28,7 +28,7 @@ func NewPostgres(global GlobalConfiguration, local Configuration) (*PostgresDump
 }
 
 func (dumper *PostgresDumper) Dump() error {
-	stringBuilder := strings.Builder{}
+	sb := strings.Builder{}
 
 	//https://www.postgresql.org/docs/14/app-pgdump.html
 	//Example configuration:
@@ -42,21 +42,22 @@ func (dumper *PostgresDumper) Dump() error {
 
 	if _, ok := vars["password"]; ok {
 		password := fmt.Sprintf("PGPASSWORD=\"%s\" ", esc(vars["password"]))
-		stringBuilder.WriteString(password)
+		sb.WriteString(password)
 	}
 
-	stringBuilder.WriteString(fmt.Sprintf("\"%s\" ", esc(dumper.globalConfiguration.PgdumpExecutable)))
-	stringBuilder.WriteString("--verbose ")
-	stringBuilder.WriteString("--format=plain ")
+	sb.WriteString(fmt.Sprintf("\"%s\" ", esc(dumper.globalConfiguration.PgdumpExecutable)))
+	sb.WriteString("--verbose ")
+	sb.WriteString("--format=plain ")
 
 	for key, value := range vars {
 		if key == "verbose" || key == "format" || key == "password" {
 			continue
 		}
-		stringBuilder.WriteString(fmt.Sprintf("--%s=\"%s\" ", key, esc(value)))
+		sb.WriteString(formatParam(key, value))
+		sb.WriteString(" ")
 	}
 
-	stringBuilder.WriteString(fmt.Sprintf("| gzip > \"%s\"", esc(dumper.tmpDumpFileName())))
+	sb.WriteString(fmt.Sprintf("| gzip > \"%s\"", esc(dumper.tmpDumpFileName())))
 
-	return dumper.execute(stringBuilder.String())
+	return dumper.execute(sb.String())
 }

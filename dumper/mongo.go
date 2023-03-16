@@ -44,22 +44,23 @@ func (dumper *Mongo5Dumper) Dump() error {
 }
 
 func buildMongoCommandline(executable, dumpFileName string, vars map[string]string) string {
-	stringBuilder := strings.Builder{}
+	sb := strings.Builder{}
 	outputDirectory := dumpFileName + "_dump"
 
-	stringBuilder.WriteString(fmt.Sprintf("\"%s\" ", esc(executable)))
-	stringBuilder.WriteString("--verbose ")
-	stringBuilder.WriteString(fmt.Sprintf("--out=\"%s\" ", esc(outputDirectory)))
+	sb.WriteString(fmt.Sprintf("\"%s\" ", esc(executable)))
+	sb.WriteString("--verbose ")
+	sb.WriteString(fmt.Sprintf("--out=\"%s\" ", esc(outputDirectory)))
 
 	for key, value := range vars {
 		if key == "verbose" || key == "archive" || key == "out" {
 			continue
 		}
-		stringBuilder.WriteString(fmt.Sprintf("--%s=\"%s\" ", key, esc(value)))
+		sb.WriteString(formatParam(key, value))
+		sb.WriteString(" ")
 	}
 
-	stringBuilder.WriteString(fmt.Sprintf("&& tar -cvzf \"%s\" --directory \"%s\" . ", esc(dumpFileName), esc(outputDirectory)))
-	stringBuilder.WriteString(fmt.Sprintf("&& rm --verbose --recursive --force \"%s\" ", esc(outputDirectory)))
+	sb.WriteString(fmt.Sprintf("&& tar -cvzf \"%s\" --directory \"%s\" . ", esc(dumpFileName), esc(outputDirectory)))
+	sb.WriteString(fmt.Sprintf("&& rm --verbose --recursive --force \"%s\" ", esc(outputDirectory)))
 
-	return stringBuilder.String()
+	return sb.String()
 }
