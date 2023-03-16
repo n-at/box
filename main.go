@@ -1,19 +1,13 @@
 package main
 
 import (
+	"box/configuration"
 	"box/dumper"
 	"box/notifier"
 	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"os"
-)
-
-var (
-	globalConfiguration       dumper.GlobalConfiguration
-	dumpConfiguration         []dumper.Configuration
-	notificationConfiguration notifier.Configuration
 )
 
 func init() {
@@ -22,44 +16,26 @@ func init() {
 	})
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.InfoLevel)
-
-	viper.SetConfigName("application")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath(".")
-	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalf("unable to read config file: %s", err)
-	}
-	globalConfiguration = dumper.GlobalConfiguration{
-		Path:                 "dumps",
-		ShExecutable:         "sh",
-		PgdumpExecutable:     "pg_dump",
-		MysqldumpExecutable:  "mysqldump",
-		Mongodump5Executable: "/mongodb5/bin/mongodump",
-		Mongodump4Executable: "/mongodb4/bin/mongodump",
-		GbakExecutable:       "/opt/firebird/bin/gbak",
-		TarExecutable:        "tar",
-	}
-	if err := viper.UnmarshalKey("global", &globalConfiguration); err != nil {
-		log.Fatalf("unable to read global configuration: %s", err)
-	}
-	if err := viper.UnmarshalKey("dumps", &dumpConfiguration); err != nil {
-		log.Fatalf("unable to read dumps configuration: %s", err)
-	}
-	if err := viper.UnmarshalKey("notification", &notificationConfiguration); err != nil {
-		log.Fatalf("unable to read notification configuration: %s", err)
-	}
 }
 
 func main() {
-	n := notifier.Notifier{
-		Configuration: notificationConfiguration,
+	config, err := configuration.Read("application.yml")
+	if err != nil {
+		log.Fatalf("unable to read configuration: %s", err)
+		return
 	}
 
-	if err := ensureDirectoryExists(globalConfiguration.Path); err != nil {
-		log.Fatalf("unable to create dump path: %s", err)
+	n := notifier.Notifier{
+		Configuration: config.Notification,
 	}
-	if err := ensureDirectoryExists(globalConfiguration.TmpPath); err != nil {
+
+	if err := ensureDirectoryExists(config.Global.Path); err != nil {
+		log.Fatalf("unable to create dump path: %s", err)
+		return
+	}
+	if err := ensureDirectoryExists(config.Global.TmpPath); err != nil {
 		log.Fatalf("unable to create tmp dump path: %s", err)
+		return
 	}
 
 	dumpsFilter := make(map[string]bool)
@@ -70,7 +46,7 @@ func main() {
 		dumpsFilter[arg] = true
 	}
 
-	for _, configuration := range dumpConfiguration {
+	for _, configuration := range config.Dumps {
 		if len(dumpsFilter) > 0 && !dumpsFilter[configuration.Name] {
 			continue
 		}
@@ -83,17 +59,17 @@ func main() {
 
 		switch configuration.Type {
 		case dumper.TypePostgres:
-			d, err = dumper.NewPostgres(globalConfiguration, configuration)
+			d, err = dumper.NewPostgres(config.Global, configuration)
 		case dumper.TypeMongo:
-			d, err = dumper.NewMongo5(globalConfiguration, configuration)
+			d, err = dumper.NewMongo5(config.Global, configuration)
 		case dumper.TypeMongoLegacy:
-			d, err = dumper.NewMongo4(globalConfiguration, configuration)
+			d, err = dumper.NewMongo4(config.Global, configuration)
 		case dumper.TypeFirebirdLegacy:
-			d, err = dumper.NewFirebirdLegacy(globalConfiguration, configuration)
+			d, err = dumper.NewFirebirdLegacy(config.Global, configuration)
 		case dumper.TypeMysql:
-			d, err = dumper.NewMysql(globalConfiguration, configuration)
+			d, err = dumper.NewMysql(config.Global, configuration)
 		case dumper.TypeTar:
-			d, err = dumper.NewTar(globalConfiguration, configuration)
+			d, err = dumper.NewTar(config.Global, configuration)
 		default:
 			err = errors.New("unknown dumper type")
 		}

@@ -12,40 +12,40 @@ const (
 )
 
 type GlobalConfiguration struct {
-	Path                 string
-	TmpPath              string
-	ShExecutable         string
-	PgdumpExecutable     string
-	MysqldumpExecutable  string
-	Mongodump5Executable string
-	Mongodump4Executable string
-	GbakExecutable       string
-	TarExecutable        string
+	Path                 string `yaml:"path"`
+	TmpPath              string `yaml:"tmp-path"`
+	ShExecutable         string `yaml:"sh-executable"`
+	PgdumpExecutable     string `yaml:"pgdump-executable"`
+	MysqldumpExecutable  string `yaml:"mysqldump-executable"`
+	Mongodump5Executable string `yaml:"mongodump-5-executable"`
+	Mongodump4Executable string `yaml:"mongodump-4-executable"`
+	GbakExecutable       string `yaml:"gbak-executable"`
+	TarExecutable        string `yaml:"tar-executable"`
 }
 
 type Configuration struct {
-	Type Type
-	Name string
+	Type Type   `yaml:"type"`
+	Name string `yaml:"name"`
 
 	//override destination path
 	//when empty, path will be global path + dumper name
-	Path string
+	Path string `yaml:"path"`
 
 	//override tmp path
-	TmpPath string
+	TmpPath string `yaml:"tmp-path"`
 
 	//variables to pass to dump executable
-	Vars map[string]string
+	Vars map[string]string `yaml:"vars"`
 
 	//make daily dumps
-	Daily bool
-	Days  int
+	Daily bool `yaml:"daily"`
+	Days  int  `yaml:"days"`
 
 	//make weekly dumps
-	Weekly bool
-	Weeks  int
+	Weekly bool `yaml:"weekly"`
+	Weeks  int  `yaml:"weeks"`
 
 	//make monthly dumps
-	Monthly bool
-	Months  int
+	Monthly bool `yaml:"monthly"`
+	Months  int  `yaml:"months"`
 }

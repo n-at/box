@@ -17,12 +17,12 @@ const (
 )
 
 type Configuration struct {
-	Enabled   bool
-	Url       string
-	Channel   string
-	Username  string
-	IconUrl   string
-	IconEmoji string
+	Enabled   bool   `yaml:"enabled"`
+	Url       string `yaml:"url"`
+	Channel   string `yaml:"channel"`
+	Username  string `yaml:"username"`
+	IconUrl   string `yaml:"icon-url"`
+	IconEmoji string `yaml:"icon-emoji"`
 }
 
 type mattermostAttachmentField struct {

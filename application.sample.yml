@@ -3,21 +3,21 @@ global:
   #Directory for dumps
   path: "dump"
   #Directory for temporary files
-  tmpPath: "tmp"
+  tmp-path: "tmp"
   #Shell (sh) executable location
-  shExecutable: "sh"
+  sh-executable: "sh"
   #tar executable location
-  tarExecutable: "tar"
+  tar-executable: "tar"
   #download: https://www.postgresql.org/download/
-  pgdumpExecutable: "pg_dump"
+  pgdump-executable: "pg_dump"
   #download: https://mirror.truenetwork.ru/mariadb//mariadb-10.11.2/bintar-linux-systemd-x86_64/mariadb-10.11.2-linux-systemd-x86_64.tar.gz
-  mysqldumpExecutable: "mysqldump"
+  mysqldump-executable: "mysqldump"
   #download: https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu2004-x86_64-100.5.2.tgz
-  mongodump5Executable: "/mongodb5/bin/mongodump"
+  mongodump-5-executable: "/mongodb5/bin/mongodump"
   #download: https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1604-4.0.28.tgz
-  mongodump4Executable: "/mongodb4/bin/mongodump"
+  mongodump-4-executable: "/mongodb4/bin/mongodump"
   #download: https://github.com/FirebirdSQL/firebird/releases/tag/R2_5_9
-  gbakExecutable: "/opt/firebird/bin/gbak"
+  gbak-executable: "/opt/firebird/bin/gbak"
 
 #Send notifications to mattermost channel
 notification:
@@ -25,7 +25,7 @@ notification:
   url: "https://example.com/hooks/******"
   channel: "backup"
   username: "box"
-  iconEmoji: ":package:"
+  icon-emoji: ":package:"
 
 dumps:
   #PostgreSQL
