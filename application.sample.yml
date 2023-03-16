@@ -31,7 +31,12 @@ dumps:
   #PostgreSQL
   - type: "postgres"
     name: "postgres_database"
-    #connection parameters
+    #override global destination path
+    #when empty, path will be global path + dumper name
+    path: "/some/path"
+    #override global tmp path
+    tmp-path: "/some/tmp/path"
+    #connection parameters (any pgdump keys, excluding verbose, format, password)
     vars:
       host: "localhost"
       port: 5432
@@ -55,6 +60,7 @@ dumps:
   - type: "mongo"
     name: "mongodb_database"
     vars:
+      #any mongodump keys, excluding verbose, archive, out
       host: "localhost"
       port: 27017
       username: "admin"
@@ -70,6 +76,7 @@ dumps:
   - type: "mongo_legacy"
     name: "mongodb_legacy_database"
     vars:
+      #any mongodump keys, excluding verbose, archive, out
       host: "localhost"
       port: 27017
       username: "admin"
@@ -96,11 +103,12 @@ dumps:
   - type: "mysql"
     name: "mysql_database"
     vars:
+      #any mysqldump keys, excluding verbose, help, databases, all-databases
       host: "localhost"
       port: 3306
       user: "helloworld"
       password: "hunter2"
-      databases: "helloworld"
+      database: "helloworld"
 
   #dump directory
   - type: "tar"

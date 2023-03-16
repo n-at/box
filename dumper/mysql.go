@@ -37,17 +37,22 @@ func (d *MysqlDumper) Dump() error {
 	//port: "3306"
 	//user: "user"
 	//password: "******"
-	//databases: "database"
+	//database: "database"
 	vars := d.configuration.Vars
 
+	database, ok := vars["database"]
+	if !ok || len(database) == 0 {
+		return errors.New("database name required")
+	}
+
 	for key, value := range vars {
-		if key == "verbose" || key == "help" {
+		if key == "verbose" || key == "help" || key == "databases" || key == "all-databases" || key == "database" {
 			continue
 		}
 		sb.WriteString(fmt.Sprintf("--%s=\"%s\" ", key, esc(value)))
 	}
 
-	sb.WriteString(fmt.Sprintf(" | gzip > \"%s\"", esc(d.tmpDumpFileName())))
+	sb.WriteString(fmt.Sprintf(" \"%s\" | gzip > \"%s\"", esc(database), esc(d.tmpDumpFileName())))
 
 	return d.execute(sb.String())
 }
