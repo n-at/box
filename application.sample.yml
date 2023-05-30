@@ -43,6 +43,8 @@ dumps:
       username: "helloworld"
       password: "hunter2"
       dbname: "helloworld"
+    #always make the latest dump, even if daily/weekly/monthly dumps exist
+    force-latest: false
     #save daily dumps
     daily: true
     #keep daily dumps for days
