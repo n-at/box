@@ -80,54 +80,72 @@ func (dumper *AbstractDumper) execute(commandline string) error {
 		overwrite:           false,
 	}
 
-	if !dumper.isDumpNeeded() {
+	dumpNeeded := dumper.isDumpNeeded()
+
+	if dumpNeeded {
+		defer func() {
+			log.Infof("%s (%s) clear tmp files...", dumper.configuration.Name, dumper.configuration.Type)
+			if err := dumper.clearTmpFiles(); err != nil {
+				log.Errorf("%s (%s) clear tmp files error: %s", dumper.configuration.Name, dumper.configuration.Type, err)
+			}
+		}()
+
+		log.Infof("%s (%s) starting...", dumper.configuration.Name, dumper.configuration.Type)
+
+		if err := dumper.executeCommand(commandline); err != nil {
+			return err
+		}
+
+		log.Infof("%s (%s) execution done", dumper.configuration.Name, dumper.configuration.Type)
+
+		if err := dumper.calculateChecksums(); err != nil {
+			return err
+		}
+
+		log.Infof("%s (%s) checksums calculated", dumper.configuration.Name, dumper.configuration.Type)
+
+		log.Infof("%s (%s) copy latest dump...", dumper.configuration.Name, dumper.configuration.Type)
+		if err := dumper.latest.execute(); err != nil {
+			return err
+		}
+	} else {
 		log.Infof("%s (%s) no dump needed, skipping", dumper.configuration.Name, dumper.configuration.Type)
-		return nil
-	}
-
-	log.Infof("%s (%s) starting...", dumper.configuration.Name, dumper.configuration.Type)
-
-	if err := dumper.executeCommand(commandline); err != nil {
-		return err
-	}
-
-	log.Infof("%s (%s) execution done", dumper.configuration.Name, dumper.configuration.Type)
-
-	if err := dumper.calculateChecksums(); err != nil {
-		return err
-	}
-
-	log.Infof("%s (%s) checksums calculated", dumper.configuration.Name, dumper.configuration.Type)
-
-	log.Infof("%s (%s) copy latest dump...", dumper.configuration.Name, dumper.configuration.Type)
-	if err := dumper.latest.execute(); err != nil {
-		return err
 	}
 
 	if dumper.configuration.Daily {
-		log.Infof("%s (%s) copy daily dump...", dumper.configuration.Name, dumper.configuration.Type)
-		if err := dumper.daily.execute(); err != nil {
+		if dumpNeeded {
+			log.Infof("%s (%s) copy daily dump...", dumper.configuration.Name, dumper.configuration.Type)
+			if err := dumper.daily.execute(); err != nil {
+				return err
+			}
+		}
+		if err := dumper.daily.rotate(); err != nil {
 			return err
 		}
 	}
 
 	if dumper.configuration.Weekly {
-		log.Infof("%s (%s) copy weekly dump...", dumper.configuration.Name, dumper.configuration.Type)
-		if err := dumper.weekly.execute(); err != nil {
+		if dumpNeeded {
+			log.Infof("%s (%s) copy weekly dump...", dumper.configuration.Name, dumper.configuration.Type)
+			if err := dumper.weekly.execute(); err != nil {
+				return err
+			}
+		}
+		if err := dumper.weekly.rotate(); err != nil {
 			return err
 		}
 	}
 
 	if dumper.configuration.Monthly {
-		log.Infof("%s (%s) copy monthly dump...", dumper.configuration.Name, dumper.configuration.Type)
-		if err := dumper.monthly.execute(); err != nil {
+		if dumpNeeded {
+			log.Infof("%s (%s) copy monthly dump...", dumper.configuration.Name, dumper.configuration.Type)
+			if err := dumper.monthly.execute(); err != nil {
+				return err
+			}
+		}
+		if err := dumper.monthly.rotate(); err != nil {
 			return err
 		}
-	}
-
-	log.Infof("%s (%s) clear tmp files...", dumper.configuration.Name, dumper.configuration.Type)
-	if err := dumper.clearTmpFiles(); err != nil {
-		return err
 	}
 
 	log.Infof("%s (%s) done", dumper.configuration.Name, dumper.configuration.Type)

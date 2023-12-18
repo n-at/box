@@ -46,8 +46,8 @@ func main() {
 		dumpsFilter[arg] = true
 	}
 
-	for _, configuration := range config.Dumps {
-		if len(dumpsFilter) > 0 && !dumpsFilter[configuration.Name] {
+	for _, dump := range config.Dumps {
+		if len(dumpsFilter) > 0 && !dumpsFilter[dump.Name] {
 			continue
 		}
 
@@ -55,37 +55,37 @@ func main() {
 		var err error
 
 		log.Infof("%s (%s), daily: %v, weekly: %v, monthly: %v",
-			configuration.Name, configuration.Type, configuration.Daily, configuration.Weekly, configuration.Monthly)
+			dump.Name, dump.Type, dump.Daily, dump.Weekly, dump.Monthly)
 
-		switch configuration.Type {
+		switch dump.Type {
 		case dumper.TypePostgres:
-			d, err = dumper.NewPostgres(config.Global, configuration)
+			d, err = dumper.NewPostgres(config.Global, dump)
 		case dumper.TypeMongo:
-			d, err = dumper.NewMongo5(config.Global, configuration)
+			d, err = dumper.NewMongo5(config.Global, dump)
 		case dumper.TypeMongoLegacy:
-			d, err = dumper.NewMongo4(config.Global, configuration)
+			d, err = dumper.NewMongo4(config.Global, dump)
 		case dumper.TypeFirebirdLegacy:
-			d, err = dumper.NewFirebirdLegacy(config.Global, configuration)
+			d, err = dumper.NewFirebirdLegacy(config.Global, dump)
 		case dumper.TypeMysql:
-			d, err = dumper.NewMysql(config.Global, configuration)
+			d, err = dumper.NewMysql(config.Global, dump)
 		case dumper.TypeTar:
-			d, err = dumper.NewTar(config.Global, configuration)
+			d, err = dumper.NewTar(config.Global, dump)
 		default:
 			err = errors.New("unknown dumper type")
 		}
 		if err != nil {
-			log.Errorf("%s (%s) unable to create dumper: %s", configuration.Name, configuration.Type, err)
+			log.Errorf("%s (%s) unable to create dumper: %s", dump.Name, dump.Type, err)
 			continue
 		}
 
-		n.Notify(notifier.StatusInfo, configuration.Name, "starting dump")
+		n.Notify(notifier.StatusInfo, dump.Name, "starting dump")
 
 		if err := d.Dump(); err != nil {
-			log.Errorf("%s (%s) dump error: %s", configuration.Name, configuration.Type, err)
-			n.Notify(notifier.StatusError, configuration.Name, err.Error())
+			log.Errorf("%s (%s) dump error: %s", dump.Name, dump.Type, err)
+			n.Notify(notifier.StatusError, dump.Name, err.Error())
 		} else {
-			log.Infof("%s (%s) dump done", configuration.Name, configuration.Type)
-			n.Notify(notifier.StatusSuccess, configuration.Name, "dump done")
+			log.Infof("%s (%s) dump done", dump.Name, dump.Type)
+			n.Notify(notifier.StatusSuccess, dump.Name, "dump done")
 		}
 	}
 }

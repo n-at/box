@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"sort"
@@ -44,7 +43,7 @@ func (period *PeriodDump) rotate() error {
 		return nil
 	}
 
-	files, err := ioutil.ReadDir(period.rootPath)
+	files, err := os.ReadDir(period.rootPath)
 	if err != nil {
 		return err
 	}
@@ -104,9 +103,6 @@ func (period *PeriodDump) execute() error {
 		return err
 	}
 	if err := copyFile(period.tmpChecksumFileName, period.checksumFileName()); err != nil {
-		return err
-	}
-	if err := period.rotate(); err != nil {
 		return err
 	}
 
