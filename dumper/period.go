@@ -3,10 +3,11 @@ package dumper
 import (
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"regexp"
 	"sort"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type PeriodDump struct {
@@ -107,6 +108,24 @@ func (period *PeriodDump) execute() error {
 	}
 
 	log.Infof("%s (%s) %s: done", period.name, period.dumpType, period.fileName)
+
+	return nil
+}
+
+func (period *PeriodDump) remove() error {
+	if !period.exists() {
+		return nil
+	}
+
+	if err := os.Remove(period.dumpFileName()); err != nil {
+		return fmt.Errorf("%s (%s) %s: unable to delete dump file: %s", period.name, period.dumpType, period.fileName, err)
+	}
+	if err := os.Remove(period.checksumFileName()); err != nil {
+		return fmt.Errorf("%s (%s) %s: unable to delete checksum file: %s", period.name, period.dumpType, period.fileName, err)
+	}
+	if err := os.Remove(period.logFileName()); err != nil {
+		return fmt.Errorf("%s (%s) %s: unable to delete log file: %s", period.name, period.dumpType, period.fileName, err)
+	}
 
 	return nil
 }

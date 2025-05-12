@@ -37,7 +37,10 @@ type Configuration struct {
 	//variables to pass to dump executable
 	Vars map[string]string `yaml:"vars"`
 
-	//always make the latest dump, even if daily/weekly/monthly dumps exist
+	//keep latest dump
+	Latest bool `yaml:"latest"`
+
+	//(if Latest is set) always make the latest dump, even if daily/weekly/monthly dumps exist
 	ForceLatest bool `yaml:"force-latest"`
 
 	//make daily dumps

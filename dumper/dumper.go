@@ -3,10 +3,11 @@ package dumper
 import (
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Dumper interface {
@@ -103,13 +104,21 @@ func (dumper *AbstractDumper) execute(commandline string) error {
 		}
 
 		log.Infof("%s (%s) checksums calculated", dumper.configuration.Name, dumper.configuration.Type)
-
-		log.Infof("%s (%s) copy latest dump...", dumper.configuration.Name, dumper.configuration.Type)
-		if err := dumper.latest.execute(); err != nil {
-			return err
-		}
 	} else {
 		log.Infof("%s (%s) no dump needed, skipping", dumper.configuration.Name, dumper.configuration.Type)
+	}
+
+	if dumper.configuration.Latest {
+		if dumpNeeded {
+			log.Infof("%s (%s) copy latest dump...", dumper.configuration.Name, dumper.configuration.Type)
+			if err := dumper.latest.execute(); err != nil {
+				return err
+			}
+		}
+	} else {
+		if err := dumper.latest.remove(); err != nil {
+			return err
+		}
 	}
 
 	if dumper.configuration.Daily {
@@ -156,7 +165,7 @@ func (dumper *AbstractDumper) execute(commandline string) error {
 ///////////////////////////////////////////////////////////////////////////////
 
 func (dumper *AbstractDumper) isDumpNeeded() bool {
-	if dumper.configuration.ForceLatest {
+	if dumper.configuration.Latest && dumper.configuration.ForceLatest {
 		return true
 	}
 	if dumper.configuration.Daily && !dumper.daily.exists() {
