@@ -115,7 +115,8 @@ func (dumper *AbstractDumper) execute(commandline string) error {
 				return err
 			}
 		}
-	} else {
+	} else if dumper.latest.exists() {
+		log.Infof("%s (%s) remove latest dump...", dumper.configuration.Name, dumper.configuration.Type)
 		if err := dumper.latest.remove(); err != nil {
 			return err
 		}

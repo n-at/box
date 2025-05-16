@@ -6,8 +6,9 @@ import (
 	"box/notifier"
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func init() {
@@ -54,8 +55,8 @@ func main() {
 		var d dumper.Dumper
 		var err error
 
-		log.Infof("%s (%s), daily: %v, weekly: %v, monthly: %v",
-			dump.Name, dump.Type, dump.Daily, dump.Weekly, dump.Monthly)
+		log.Infof("%s (%s), latest: %v, daily: %v, weekly: %v, monthly: %v",
+			dump.Name, dump.Type, dump.Latest, dump.Daily, dump.Weekly, dump.Monthly)
 
 		switch dump.Type {
 		case dumper.TypePostgres:
